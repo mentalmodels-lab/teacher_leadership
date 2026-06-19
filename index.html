@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교사 개인 성향 및 교수 스타일 진단</title>
+    <title>교사 개인 성향 & 교수 스타일 진단</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #059669; --success: #10b981; --bg: #f0fdf4; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
@@ -30,7 +30,6 @@
         input[type="radio"]:checked + .opt-label { border-color: var(--primary); background: #dcfce7; }
         input[type="radio"]:checked + .opt-label .opt-title { color: var(--primary); font-weight: bold; }
         
-        /* 2단계 버튼 가로 정렬 스타일 */
         .motivation-options { display: flex; flex-direction: row; justify-content: flex-start; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
         .score-label { padding: 10px 20px; min-width: 70px; box-sizing: border-box; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; text-align: center; transition: 0.2s; background: #fff; }
         input[type="radio"]:checked + .score-label { border-color: var(--primary); background: #dcfce7; color: var(--primary); font-weight: bold; }
@@ -49,6 +48,7 @@
 
         .ai-bridge-box { background: #f0fdf4; border: 2px dashed var(--success); padding: 25px; border-radius: 12px; margin-top: 30px; text-align: center; }
         .btn-copy { background: var(--success); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+        .btn-copy:hover { background: #059669; }
         .btn-data-copy { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; margin-left: 10px; transition: 0.2s; }
         #prompt-preview { width: 100%; height: 120px; margin-top: 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #475569; resize: none; }
     </style>
@@ -65,11 +65,11 @@
 
     <div id="section0" class="survey-section active">
         <h2>교사 정보 입력</h2>
-        <p style="text-align:center; color:#64748b;">본인의 교육 성향과 학교 관리를 위한 기본 정보를 입력해 주세요.</p>
+        <p style="text-align:center; color:#64748b;">본인의 기본 정보를 입력해 주세요. 실명이 아니어도 좋습니다. </p>
         <div style="max-width: 500px; margin: 40px auto 0 auto;">
-            <div class="input-group"><label for="user-school">소속 학교명</label><input type="text" id="user-school" placeholder="예: 서울고등학교"></div>
+            <div class="input-group"><label for="user-school">소속 학교명</label><input type="text" id="user-school" placeholder="예: 한국고등학교"></div>
             <div class="input-group"><label for="user-nickname">교사 성명 또는 닉네임</label><input type="text" id="user-nickname" placeholder="예: 김교사"></div>
-            <div class="input-group"><label for="user-subject">담당 과목 또는 학년</label><input type="text" id="user-subject" placeholder="예: 수학 / 2학년 담임"></div>
+            <div class="input-group"><label for="user-subject">담당 과목 또는 학년</label><input type="text" id="user-subject" placeholder="예: 영어 / 2학년 담임"></div>
             <button class="btn-submit" onclick="startSurvey()">교육 성향 진단 시작하기 🚀</button>
         </div>
     </div>
@@ -106,7 +106,7 @@
 
         <div class="ai-bridge-box">
             <h3>🤖 나만의 AI 비서 연결 및 결과 활용</h3>
-            <p>진단 데이터 프로파일이 완성되었습니다. 아래 버튼을 눌러 복사한 뒤 AI(ChatGPT 등)에 붙여넣어 활용해 보세요.</p>
+            <p>진단 데이터 프로파일이 완성되었습니다. 아래 버튼을 눌러 복사한 뒤 AI(ChatGPT 등)에 붙여넣으세요.</p>
             
             <div style="margin-bottom: 5px;">
                 <button class="btn-copy" onclick="copyPromptToClipboard()">📋 AI 분석 프롬프트 복사하기</button>
@@ -209,7 +209,6 @@
         motiContainer.innerHTML = '';
         motiQuestions.forEach((qText, qIdx) => {
             let html = `<div class="q-card"><div class="q-title">${qText}</div><div class="motivation-options">`;
-            // 🌟 수정: 가로 정렬 및 공간 최적화 반영
             for(let i=1; i<=5; i++) { html += `<input type="radio" id="m_${qIdx}_${i}" name="moti_${qIdx}" value="${i}"><label for="m_${qIdx}_${i}" class="score-label">${i}점</label> `; }
             motiContainer.innerHTML += html + `</div></div>`;
         });
@@ -243,3 +242,120 @@
 
     function moveDiscPage(direction) {
         if (direction === 1) {
+            let startIdx = (currentSubPage - 1) * 10;
+            for (let i = startIdx; i < startIdx + 10; i++) { if (!document.querySelector(`input[name="disc_${i}"]:checked`)) { alert(`현재 페이지의 ${i + 1}번 문항을 선택하지 않으셨습니다.`); return; } }
+        }
+        currentSubPage += direction;
+        if (currentSubPage > 4) {
+            document.getElementById('tab1-btn').classList.remove('active');
+            document.getElementById('tab2-btn').classList.add('active');
+            switchSection('section2'); window.scrollTo(0,0);
+        } else { showCurrentDiscPage(); window.scrollTo(0,0); }
+    }
+
+    function calculateResults() {
+        for(let i=0; i<16; i++) { if(!document.querySelector(`input[name="moti_${i}"]:checked`)) { alert(`2단계 문항 점수를 누락 없이 선택해주세요.`); return; } }
+        let colSum = [0, 0, 0, 0];
+        for(let i=0; i<40; i++) { colSum[parseInt(document.querySelector(`input[name="disc_${i}"]:checked`).value)]++; }
+        let X = colSum[2] - colSum[0]; let Y = colSum[1] - colSum[3]; 
+        const getMotiVal = (idx) => parseInt(document.querySelector(`input[name="moti_${idx}"]:checked`).value);
+        let scores = { "연구보상": getMotiVal(2)+getMotiVal(8), "피드백인정": getMotiVal(4)+getMotiVal(9), "전문성성장": getMotiVal(0)+getMotiVal(11), "교수자율성": getMotiVal(3)+getMotiVal(12), "교육적의미": getMotiVal(6)+getMotiVal(13), "조직안정성": getMotiVal(1)+getMotiVal(15), "동료관계": getMotiVal(7)+getMotiVal(14), "성과경쟁": getMotiVal(5)+getMotiVal(10) };
+        document.getElementById('tab-headers').style.display = 'none';
+        
+        switchSection('section-result');
+        document.getElementById('res-name').innerText = userInfo.nickname;
+        renderCharts(X, Y, scores); renderStyleFeedback(X, Y); generateAIPrompt(X, Y, scores);
+        
+        const payload = { school: userInfo.school, nickname: userInfo.nickname, subject: userInfo.subject, X: X, Y: Y, scores: scores };
+        fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    }
+
+    function renderCharts(X, Y, scores) {
+        new Chart(document.getElementById('discChart').getContext('2d'), {
+            type: 'scatter',
+            data: { datasets: [{ label: '나의 위치', data: [{x: X, y: Y}], backgroundColor: '#059669', radius: 12 }] },
+            options: { 
+                scales: { 
+                    x: { min: -40, max: 40, 
+                         grid: { color: (ctx) => ctx.tick.value === 0 ? '#1e293b' : '#e2e8f0', lineWidth: (ctx) => ctx.tick.value === 0 ? 3 : 1 } 
+                    }, 
+                    y: { min: -40, max: 40, 
+                         grid: { color: (ctx) => ctx.tick.value === 0 ? '#1e293b' : '#e2e8f0', lineWidth: (ctx) => ctx.tick.value === 0 ? 3 : 1 } 
+                    } 
+                } 
+            }
+        });
+        new Chart(document.getElementById('motiChart').getContext('2d'), {
+            type: 'radar',
+            data: { labels: Object.keys(scores), datasets: [{ label: '동기 스코어', data: Object.values(scores), backgroundColor: 'rgba(5, 150, 105, 0.15)', borderColor: '#059669', borderWidth: 2 }] },
+            options: { scales: { r: { min: 2, max: 10 } } }
+        });
+    }
+
+    function renderStyleFeedback(X, Y) {
+        let card = document.getElementById('style-feedback-card');
+        if (X >= 0 && Y >= 0) {
+            card.innerHTML = `
+                <h4>🎯 [제1사분면] 목표지향적 강력한 리더형 교사 (D-Style)</h4>
+                <p><strong>핵심 특징:</strong> 선생님은 명확한 비전과 추진력을 가지고 학급과 수업을 주도적으로 이끄는 카리스마 넘치는 지도자입니다. 복잡한 상황에서도 의사결정이 빠르며, 결과 중심적인 수업 설계 능력이 탁월합니다.</p>
+                <p><strong>주력 수업 설계:</strong> 거꾸로 교실(Flipped Learning)이나 프로젝트 기반 학습(PBL)에서 성과 지향적 미션을 부여할 때 학생들의 역량을 최대로 끌어냅니다. 경쟁 요소가 결합된 활기찬 팀 미션을 통해 역동적인 교실을 만듭니다.</p>
+                <p><strong>시너지 및 주의점:</strong> 효율적이고 체계적인 학급 관리가 가능하지만, 속도가 느리거나 정서적 배려가 필요한 학생들의 세밀한 신호에 조금 더 귀 기울여 주신다면 범접할 수 없는 최고의 멘토가 되실 것입니다.</p>`;
+        } else if (X < 0 && Y >= 0) {
+            card.innerHTML = `
+                <h4>✨ [제2사분면] 소통과 활력 중심의 에너지형 교사 (I-Style)</h4>
+                <p><strong>핵심 특징:</strong> 선생님은 탁월한 친화력과 쾌활함으로 교실 분위기를 밝게 물들이는 최고의 분위기 메이커입니다. 긍정적인 언어 사용과 공감을 통해 학생들과의 심리적 거리감을 파괴하는 소통 전문가입니다.</p>
+                <p><strong>주력 수업 설계:</strong> 원탁 토론, 역할극 수업, 자유로운 브레인스토밍 활동을 가미하여 학생들이 실패에 대한 두려움 없이 창의적인 생각을 맘껏 펼치도록 판을 깔아주는 데 능숙합니다.</p>
+                <p><strong>시너지 및 주의점:</strong> 학생들의 학교생활 만족도가 매우 높지만, 때로는 감정에 휩쓸리지 않는 단호하고 규칙적인 원칙을 일관성 있게 유지하여 학급의 안정적 통제력을 확보하는 노력이 필요합니다.</p>`;
+        } else if (X < 0 && Y < 0) {
+            card.innerHTML = `
+                <h4>🤝 [제3사분면] 경청과 배려 중심의 서번트형 교사 (S-Style)</h4>
+                <p><strong>핵심 특징:</strong> 선생님은 언제나 한결같은 태도로 이야기를 들어주며, 교실을 가장 안전하고 평화로운 공간으로 만드는 따뜻한 치유자입니다. 낙오되거나 상처받는 학생이 없도록 보이지 않는 곳에서 헌신합니다.</p>
+                <p><strong>주력 수업 설계:</strong> 급격한 경쟁보다는 또래 멘토링, 격려 중심의 협동 학습, 정서적 유대를 다지는 글쓰기나 독서 활동을 운영하여 학생들이 정서적 평온함 속에서 학습 목표에 도달하도록 돕습니다.</p>
+                <p><strong>시너지 및 주의점:</strong> 사각지대 없는 끈끈한 공동체가 형성되지만, 교사 본인의 에너지를 과도하게 타인에게 쏟아붓다 번아웃이 올 수 있으므로 자신만의 감정 방어선과 휴식 루틴을 반드시 확보해야 합니다.</p>`;
+        } else {
+            card.innerHTML = `
+                <h4>🔍 [제4사분면] 체계와 정확성 중심의 멘토형 교사 (C-Style)</h4>
+                <p><strong>핵심 특징:</strong> 선생님은 구조화된 지식 체계와 정확한 분석력, 그리고 공정한 평가 기준을 최우선으로 여기는 전문가형 교사입니다. 주관적 감정에 치우치지 않고 객관적인 팩트를 바탕으로 학생들을 지도합니다.</p>
+                <p><strong>주력 수업 설계:</strong> 정밀하게 설계된 루브릭(평가기준)을 사전에 명시하고, 논리적 추론이나 데이터 분석을 요하는 AI 융합 수업, 탐구 보고서 작성 등 완성도 높은 학술적 과제를 설계할 때 빛을 발합니다.</p>
+                <p><strong>시너지 및 주의점:</strong> 수업의 완성도와 행정적 안전성이 매우 높지만, 돌발 상황이나 유연성을 요하는 학생들의 즉흥적인 질문에 대해서는 조금 더 열린 마음으로 다가가면 교우 관계의 깊이가 한층 더해질 것입니다.</p>`;
+        }
+    }
+
+    function generateAIPrompt(X, Y, scores) {
+        let motiString = Object.entries(scores).map(([k, v]) => `- ${k}: ${v}점`).join("\n");
+        rawResultText = `[교사 성향 진단 결과]\n- 학교: ${userInfo.school}\n- 이름: ${userInfo.nickname}\n- 담당: ${userInfo.subject}\n- DISC 좌표: X축=${X}, Y축=${Y}\n- 8대 교육 동기:\n${motiString}`;
+        generatedPrompt = `당신은 대한민국 교육 환경을 깊이 이해하고 있는 장학사 출신의 교사 전문 심리 코칭 전문가입니다. 
+[${userInfo.nickname}] 선생님만을 위한 1:1 심층 교육 스타일 분석 리포트를 작성해 주세요.
+
+[교사 정보]
+- school: ${userInfo.school} / name: ${userInfo.nickname} / subject: ${userInfo.subject}
+
+[진단 데이터]
+1. 교수 스타일 좌표: X축 = ${X}, Y축 = ${Y} 
+2. 8대 교육 동기:\n${motiString}
+
+[요청 포맷]
+1. 종합 교육 철학 한 줄 평 및 핵심 키워드 3개
+2. 교수 스타일 장점 분석 (교실 수업 및 학급 경영 관점)
+3. 교사 번아웃/슬럼프 유발 요인 및 극복법
+4. 성향 맞춤형 학급 경영 및 업무 효율 극대화 팁
+5. 동료 교사 및 관리자와 마찰 없이 협업하는 팁`;
+        document.getElementById('prompt-preview').value = generatedPrompt;
+    }
+
+    function copyPromptToClipboard() {
+        const preview = document.getElementById('prompt-preview');
+        preview.style.display = "block"; preview.select(); document.execCommand('copy'); preview.style.display = "none"; 
+        alert('📋 전문 분석 프롬프트가 복사되었습니다!\nAI 채팅창에 그대로 붙여넣기(Ctrl+V) 하세요.');
+    }
+
+    function copyRawDataToClipboard() {
+        const dummy = document.createElement("textarea"); document.body.appendChild(dummy);
+        dummy.value = rawResultText; dummy.select(); document.execCommand('copy'); document.body.removeChild(dummy);
+        alert('📌 내 성향 데이터 요약본이 복사되었습니다!\nAI 채팅창에 붙여넣어 다양하게 질문해 보세요.');
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
