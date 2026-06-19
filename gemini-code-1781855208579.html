@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교사 개인 성향 및 교수 스타일 진단</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #059669; --success: #10b981; --bg: #f0fdf4; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: var(--primary); }
+        .tab-buttons { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .tab-btn { padding: 12px 24px; border: 1px solid var(--border); background: #fff; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .survey-section { display: none; }
+        .survey-section.active { display: block; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 8px; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .q-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .q-title { font-weight: bold; margin-bottom: 12px; font-size: 1.1rem; color: #0f172a; }
+        .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+        .opt-label { background: #fff; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s; display: block; font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .opt-label:hover { border-color: #94a3b8; }
+        input[type="radio"] { display: none; }
+        input[type="radio"]:checked + .opt-label { border-color: var(--primary); background: #dcfce7; color: var(--primary); font-weight: bold; }
+        .motivation-options { display: flex; justify-content: space-between; gap: 5px; margin-top: 10px; }
+        .btn-submit { display: block; width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 30px; }
+        .btn-submit:hover { background: #047857; }
+        .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+        @media (max-width: 768px) { .result-grid { grid-template-columns: 1fr; } }
+        .chart-container { background: #fff; padding: 20px; border: 1px solid var(--border); border-radius: 12px; min-height: 350px; }
+        
+        /* 교육 가이드 전용 스타일 */
+        .guide-box { background: #f8fafc; border: 1px solid var(--border); padding: 25px; border-radius: 12px; margin-top: 25px; }
+        .style-card { padding: 20px; border-radius: 8px; background: #fff; border-left: 5px solid var(--primary); margin-top: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .ai-bridge-box { background: #f0fdf4; border: 2px dashed var(--success); padding: 25px; border-radius: 12px; margin-top: 30px; text-align: center; }
+        .btn-copy { background: var(--success); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        #prompt-preview { width: 100%; height: 120px; margin-top: 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #475569; resize: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👨‍🏫 교사 개인 성향 & 교수 스타일 진단</h1>
+    
+    <div class="tab-buttons" id="tab-headers" style="display: none;">
+        <button class="tab-btn active" id="tab1-btn">1단계: 나의 행동 스타일</button>
+        <button class="tab-btn" id="tab2-btn">2단계: 나의 교육 동기</button>
+    </div>
+
+    <!-- 0단계: 인적사항 입력 화면 -->
+    <div id="section0" class="survey-section active">
+        <h2>교사 정보 입력</h2>
+        <p style="text-align:center; color:#64748b;">본인의 교육 성향과 학교 관리를 위한 기본 정보를 입력해 주세요.</p>
+        <div style="max-width: 500px; margin: 40px auto 0 auto;">
+            <div class="input-group">
+                <label for="user-school">소속 학교명</label>
+                <input type="text" id="user-school" placeholder="예: 서울고등학교">
+            </div>
+            <div class="input-group">
+                <label for="user-nickname">교사 성명 또는 닉네임</label>
+                <input type="text" id="user-nickname" placeholder="예: 김교사">
+            </div>
+            <div class="input-group">
+                <label for="user-subject">담당 과목 또는 학년</label>
+                <input type="text" id="user-subject" placeholder="예: 수학 / 2학년 담임">
+            </div>
+            <button class="btn-submit" onclick="startSurvey()">교육 성향 진단 시작하기 🚀</button>
+        </div>
+    </div>
+
+    <!-- 1단계: DISC 행동 스타일 -->
+    <div id="section1" class="survey-section">
+        <h2>1단계: 교무실 및 교실에서의 내 모습 (단어 선택)</h2>
+        <p style="text-align:center; color:#64748b;">각 문항에서 학교 업무를 하거나 학생들을 지도할 때의 나와 가장 가까운 단어를 선택하세요.</p>
+        <div id="disc-questions"></div>
+        <button class="btn-submit" onclick="nextSection()">2단계로 이동 ➡️</button>
+    </div>
+
+    <!-- 2단계: 업무 동기부여 -->
+    <div id="section2" class="survey-section">
+        <h2>2단계: 교사로서 보람을 느끼는 순간 (점수 척도)</h2>
+        <p style="text-align:center; color:#64748b;">각 문장이 본인의 교육 가치관과 얼마나 일치하는지 점수(1점~5점)를 매겨주세요.</p>
+        <div id="motivation-questions"></div>
+        <button class="btn-submit" onclick="calculateResults()">진단 결과 리포트 보기 📊</button>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="section-result" class="survey-section">
+        <h2>📊 <span id="res-name"></span> 선생님의 교육 스타일 리포트</h2>
+        <div style="text-align: center; color: var(--success); font-weight: bold; margin-bottom: 15px;" id="db-status">
+            💾 교사 성향 데이터가 구글 시트에 안전하게 기록되었습니다.
+        </div>
+        
+        <div class="result-grid">
+            <div class="chart-container">
+                <h3 style="text-align:center;">나의 교수 스타일 포지션 Grid</h3>
+                <canvas id="discChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 style="text-align:center;">나를 움직이는 8대 교육 동기</h3>
+                <canvas id="motiChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 교사 맞춤형 자체 피드백 -->
+        <div class="guide-box">
+            <h3>💡 나의 대표적인 교수(Teaching) 스타일</h3>
+            <div class="style-card" id="style-feedback-card">
+                <!-- JavaScript에서 성향별 동적 텍스트 삽입 -->
+            </div>
+        </div>
+
+        <div class="ai-bridge-box">
+            <h3>🤖 AI 교육 코치에게 '교사 슬럼프 극복 및 학급경영 팁' 받기</h3>
+            <p>아래 버튼을 눌러 프롬프트를 복사한 뒤 AI(ChatGPT 등)에 붙여넣으세요.<br>
+            선생님의 성향에 맞춘 **'스트레스 관리법과 학급 경영/수업 설계 가이드'**를 제공합니다.</p>
+            <button class="btn-copy" onclick="copyPromptToClipboard()">📋 교사용 심층 분석 프롬프트 복사하기</button>
+            <textarea id="prompt-preview" readonly></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_WEB_APP_URL"; // 운영자 구글 시트 URL 주입
+
+    let userInfo = { school: "", nickname: "", subject: "" };
+
+    const discData = [
+        ["생기발랄한", "모험심 강한", "분석적인", "무난히 잘 어울리는"],
+        ["쾌활한", "설득력 있는", "주관이 뚜렷한", "말수가 적고 차분한"],
+        ["사교적인", "자립심이 강한", "헌신적인", "순응적인"],
+        ["매력적인", "승부욕이 강한", "사려 깊은", "감정을 절제하는"],
+        ["창의적인", "유능한", "정중한", "말과 행동을 삼가는"],
+        ["활기찬", "독립적인", "섬세하고 민감한", "수용적인"],
+        ["용기를 북돋우는", "주도적인", "계획적인", "인내심이 많은"],
+        ["즉흥적인", "자신감 넘치는", "체계적인", "말이 없고 신중한"],
+        ["낙천적인", "솔직담백한", "질서정연한", "다정다감한"],
+        ["유머러스한", "소신이 뚜렷한", "철두철미한", "친근한"],
+        ["유쾌한", "대담하고 겁 없는", "꼼꼼하고 세심한", "싹싹하고 다정한"],
+        ["밝고 명랑한", "확신에 찬", "진중하고 점잖은", "침착하고 안정된"],
+        ["영감을 주는", "독립심이 강한", "이상주의적인", "온화하고 유순한"],
+        ["다정다감한", "결단력 있는", "몰두하는", "넉살 좋고 태연한"],
+        ["싹싹하게 어울리는", "적극적으로 제안하는", "예술적 감수성이 풍부한", "중재를 잘하는"],
+        ["말재주가 좋은", "성취 지향적인", "신중한", "관대한"],
+        ["열정적인", "책임감 있는", "충직하고 신뢰감 있는", "경청하는"],
+        ["돋보이고 싶어하는", "지도력 있는", "조직적인", "현실에 만족하는"],
+        ["인기 있는", "생산적인", "완벽을 추구하는", "마음을 편하게 해주는"],
+        ["활력 넘치는", "과감한", "예의 바른", "중용을 지키는"],
+        ["뻔뻔스러운", "압도하려 드는", "낯을 가리고 수줍어하는", "감정이 안 드러나는"],
+        ["산만하고 무질서한", "냉정한", "뒤끝이 있고 냉혹한", "매사 의욕이 없는"],
+        ["같은 말을 반복하는", "공격적으로 맞서는", "앙금이 오래가는", "마지못해 따르는"],
+        ["쉽게 까먹는", "거침없이 직설적인", "까다롭고 유난스러운", "겁이 많고 불안해하는"],
+        ["말을 가로채는", "조급하고 참을성 없는", "자신감 없고 불안정한", "우유부단한"],
+        ["충동적이고 예측 불가능한", "무뚝뚝하고 냉담한", "평판이 안 좋은", "소외되어 겉도는"],
+        ["대충 즉흥적으로 하는", "고집스럽고 완고한", "눈이 높아 만족할 줄 모르는", "우물쭈물 주저하는"],
+        ["눈치 보며 비위 맞추는", "자존심이 지나치게 강한", "회의적이고 비관적인", "튀지 않고 평범한"],
+        ["욱하고 성미가 급한", "따지기 좋아하는", "소외감을 잘 느끼는", "목표 의식이 없는"],
+        ["생각이 단순한", "오만하고 자만하는", "매사 부정적인", "속마음을 표현하지 않는"],
+        ["자기 자랑이 심한", "일에 과도하게 집착하는", "지나치게 내향적인", "걱정과 근심이 많은"],
+        ["말만 앞서는", "뚱하고 무뚝뚝한", "신경질적이고 예민한", "소심하고 위축된"],
+        ["정리 정돈을 못하는", "독선적이고 지배적인", "쉽게 좌절하고 낙심하는", "우유부단하고 결단력 없는"],
+        ["말바꾸기가 심한", "융통성 없고 야박한", "내성적임", "결과에 무관심한"],
+        ["주변을 어지르는", "교묘하게 사람을 조종하는", "쉽게 우울해하는", "투덜대고 불평이 많은"],
+        ["보여주기식을 좋아하는", "고집불통인", "의심 많고 회의적인", "행동이 느려터진"],
+        ["목소리만 큰", "독단적으로 주장하는", "혼자 고독을 즐기는", "움직이기 싫어하고 게으른"],
+        ["안절부절못하고 산만한", "성미가 불같이 급한", "매사 의심하고 경계하는", "행동이 둔하고 느린"],
+        ["금방 싫증 내는", "조심성 없고 덤벙대는", "복수심이 강한", "마음 없이 억지로 하는"],
+        ["변덕스러운", "계산적이고 영악한", "비판적이고 꼬투리를 잘 잡는", "갈등이 싫어 대충 타협하는"]
+    ];
+
+    // 👨‍🏫 교사의 일터(학교) 맥락에 맞춘 동기부여 문항
+    const motiQuestions = [
+        "1. 새로운 교육 이론이나 에듀테크 툴을 배워 수업에 적용해볼 기회가 있을 때 열정이 생긴다. (성장)",
+        "2. 명확한 교육청 지침, 학교 내 규정 및 평가 기준 가이드라인이 명확할 때 안심하고 일한다. (안정)",
+        "3. 업무 성과에 따른 수당 보상이나 연구비 지원 등 물질적 메리트가 확실할 때 더 몰입한다. (보상)",
+        "4. 진도나 수업 방식, 학급 규칙을 교사인 내가 원하는 대로 자율적으로 설계할 수 있을 때 신난다. (자율)",
+        "5. 동료 교사나 학부모, 학생들로부터 '최고의 선생님이다'라는 진심 어린 감사를 들을 때 보람차다. (인정)",
+        "6. 시범 학교 운영을 주도하거나, 연구대회 등에서 우수한 성과를 내어 역량을 증명하고 싶다. (경쟁)",
+        "7. 이 교육이나 행정 업무가 학생들에게 진짜 어떤 가치와 도움을 주는지 명분이 서야 움직인다. (의미)",
+        "8. 업무 성과보다 교무실 내 따뜻한 동료 관계, 교사 간의 끈끈한 유대감이 직장 생활에서 가장 중요하다. (관계)",
+        "9. 학교 분위기가 좋아도 부장 수당이나 실질적인 경제적 처우가 약하면 행정 업무에 의욕이 나지 않는다. (보상)",
+        "10. 학급을 위해 밤새 행사나 수업을 준비했는데, 관리자나 학부모가 알아주지 않고 당연하게 여기면 무력감을 느낀다. (인정)",
+        "11. 우수 학급 지표나 연구 성과가 수치로 시각화되어 다른 교사/학교와 비교될 때 승부욕이 생긴다. (경쟁)",
+        "12. 매년 아무런 발전 없이 똑같은 행정 서류 가공이나 반복적인 나이스(NEIS) 입력만 할 때 가장 괴롭다. (성장)",
+        "13. 교장·교감 선생님의 과도한 마이크로 매니징과 세세한 통제가 있으면 의욕이 급격히 꺾인다. (자율)",
+        "14. 보상이나 평판이 없더라도, 내가 지도한 학생 한 명이 긍정적으로 변화하는 모습을 보면 교사로서 살아있음을 느낀다. (의미)",
+        "15. 동료 교사 간 파벌이 있거나 갈등이 생겨 학교 분위기가 불편해지면 업무 능률이 급격히 떨어진다. (관계)",
+        "16. 잦은 교육과정 개정이나 급격한 학교 환경 변화보다, 예측 가능하고 심리적 안전감이 확보된 환경을 선호한다. (안정)"
+    ];
+
+    function init() {
+        const discContainer = document.getElementById('disc-questions');
+        discData.forEach((row, qIdx) => {
+            let html = `<div class="q-card"><div class="q-title">문항 ${qIdx + 1}</div><div class="options-grid">`;
+            row.forEach((word, colIdx) => {
+                html += `<input type="radio" id="d_${qIdx}_${colIdx}" name="disc_${qIdx}" value="${colIdx}"><label for="d_${qIdx}_${colIdx}" class="opt-label">${word}</label> `;
+            });
+            html += `</div></div>`;
+            discContainer.innerHTML += html;
+        });
+
+        const motiContainer = document.getElementById('motivation-questions');
+        motiQuestions.forEach((qText, qIdx) => {
+            let html = `<div class="q-card"><div class="q-title">${qText}</div><div class="motivation-options">`;
+            for(let i=1; i<=5; i++) {
+                html += `<input type="radio" id="m_${qIdx}_${i}" name="moti_${qIdx}" value="${i}"><label for="m_${qIdx}_${i}" class="opt-label" style="padding:8px;">${i}점</label> `;
+            }
+            html += `</div></div>`;
+            motiContainer.innerHTML += html;
+        });
+    }
+
+    function startSurvey() {
+        const sch = document.getElementById('user-school').value.trim();
+        const nick = document.getElementById('user-nickname').value.trim();
+        const subj = document.getElementById('user-subject').value.trim();
+
+        if(!sch || !nick || !subj) { alert("진단을 위해 모든 교사 정보를 입력해 주세요."); return; }
+        userInfo = { school: sch, nickname: nick, subject: subj };
+
+        document.getElementById('section0').classList.remove('active');
+        document.getElementById('tab-headers').style.display = 'flex';
+        document.getElementById('section1').classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    function nextSection() {
+        for(let i=0; i<40; i++) {
+            if(!document.querySelector(`input[name="disc_${i}"]:checked`)) { alert(`행동 스타일 진단의 ${i+1}번 문항을 선택하지 않으셨습니다.`); return; }
+        }
+        document.getElementById('tab1-btn').classList.remove('active');
+        document.getElementById('tab2-btn').classList.add('active');
+        document.getElementById('section1').classList.remove('active');
+        document.getElementById('section2').classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    let discChartInstance = null;
+    let motiChartInstance = null;
+    let generatedPrompt = "";
+
+    function calculateResults() {
+        for(let i=0; i<16; i++) {
+            if(!document.querySelector(`input[name="moti_${i}"]:checked`)) { alert(`교육 동기 진단의 ${i+1}번 문항 점수를 선택하지 않으셨습니다.`); return; }
+        }
+
+        let colSum = [0, 0, 0, 0];
+        for(let i=0; i<40; i++) {
+            let val = parseInt(document.querySelector(`input[name="disc_${i}"]:checked`).value);
+            colSum[val]++;
+        }
+        let X = colSum[2] - colSum[0]; 
+        let Y = colSum[1] - colSum[3]; 
+
+        const getMotiVal = (idx) => parseInt(document.querySelector(`input[name="moti_${idx}"]:checked`).value);
+        let scores = {
+            "연구보상": getMotiVal(2) + getMotiVal(8), "피드백인정": getMotiVal(4) + getMotiVal(9),
+            "전문성성장": getMotiVal(0) + getMotiVal(11), "교수자율성": getMotiVal(3) + getMotiVal(12),
+            "교육적의미": getMotiVal(6) + getMotiVal(13), "조직안정성": getMotiVal(1) + getMotiVal(15),
+            "동료관계": getMotiVal(7) + getMotiVal(14), "성과경쟁": getMotiVal(5) + getMotiVal(10)
+        };
+
+        document.getElementById('tab-headers').style.display = 'none';
+        document.querySelectorAll('.survey-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('section-result').add;
+        document.getElementById('section-result').classList.add('active');
+        document.getElementById('res-name').innerText = userInfo.nickname;
+
+        renderCharts(X, Y, scores);
+        renderStyleFeedback(X, Y);
+        generateAIPrompt(X, Y, scores);
+        
+        // 구글 시트 데이터 전송 백엔드 연동 영역
+        const payload = { school: userInfo.school, nickname: userInfo.nickname, subject: userInfo.subject, X: X, Y: Y, scores: scores };
+        fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    }
+
+    function renderCharts(X, Y, scores) {
+        const ctx1 = document.getElementById('discChart').getContext('2d');
+        discChartInstance = new Chart(ctx1, {
+            type: 'scatter',
+            data: { datasets: [{ label: '나의 위치', data: [{x: X, y: Y}], backgroundColor: '#059669', radius: 10 }] },
+            options: { scales: { x: { min: -40, max: 40, title: {display:true, text:'← 관계 중심 / 업무 중심 →'} }, y: { min: -40, max: 40, title: {display:true, text:'← 안정 선호 / 주도 선호 →'} } } }
+        });
+
+        const ctx2 = document.getElementById('motiChart').getContext('2d');
+        motiChartInstance = new Chart(ctx2, {
+            type: 'radar',
+            data: { labels: Object.keys(scores), datasets: [{ label: '동기 스코어', data: Object.values(scores), backgroundColor: 'rgba(5, 150, 105, 0.15)', borderColor: '#059669', borderWidth: 2 }] },
+            options: { scales: { r: { min: 2, max: 10 } } }
+        });
+    }
+
+    // 사분면 기반 자체 교수 스타일 피드백 엔진
+    function renderStyleFeedback(X, Y) {
+        let card = document.getElementById('style-feedback-card');
+        if (X >= 0 && Y >= 0) {
+            card.innerHTML = `<h4>🎯 목표지향적 강력한 리더형 교사 (D)</h4><p>선생님은 명확한 목표와 카리스마를 바탕으로 학급을 일사불란하게 이끄는 스타일입니다. 학생들이 도전에 직면했을 때 강력한 추진력을 불어넣어 주며, 결과 중심의 프로젝트 수업에서 뛰어난 성과를 냅니다. 다만, 가끔은 속도가 조금 느리거나 감정적 배려가 필요한 학생들의 신호를 놓치지 않도록 주의가 필요합니다.</p>`;
+        } else if (X < 0 && Y >= 0) {
+            card.innerHTML = `<h4>✨ 소통과 활력 중심의 에너지형 교사 (I)</h4><p>선생님은 교실 분위기를 항상 밝고 활기차게 만드는 탁월한 능력이 있습니다. 아이디어가 풍부하여 혁신적인 수업 방식을 적극 시도하고, 친근한 대화로 학생들과의 정서적 벽을 쉽게 허뭅니다. 단, 행정 업무나 세부적인 마무리가 흐려지기 쉬우니 타임라인을 꼼꼼하게 메모하는 습관이 도움이 됩니다.</p>`;
+        } else if (X < 0 && Y < 0) {
+            card.innerHTML = `<h4>🤝 경청과 배려 중심의 서번트형 교사 (S)</h4><p>선생님은 교실을 가장 안전하고 평화로운 공간으로 만드는 따뜻한 치유자입니다. 소외되는 학생의 이야기를 묵묵히 들어주며 감정적 지지대 역할을 훌륭히 수행합니다. 학급의 급격한 변화보다는 안정된 루틴을 선호합니다. 갈등 상황을 회피하려다 지칠 수 있으니 가끔은 단호한 훈육 태도도 필요합니다.</p>`;
+        } else {
+            card.innerHTML = `<h4>🔍 체계와 정확성 중심의 멘토형 교사 (C)</h4><p>선생님은 구조화된 지식 전달과 공정하고 명확한 기준 처리에 능한 철두철미한 전문가입니다. 수업 자료의 완성도가 매우 높으며 수행평가나 나이스 입력 시 실수가 거의 없습니다. 규칙과 원칙을 중시하지만, 규칙 조항에 지나치게 얽매이면 즉흥적이고 창의적인 학생의 돌발 행동에 스트레스를 받을 수 있으니 유연성을 발휘해 보세요.</p>`;
+        }
+    }
+
+    function generateAIPrompt(X, Y, scores) {
+        let motiString = Object.entries(scores).map(([k, v]) => `- ${k}: ${v}점`).join("\n");
+        generatedPrompt = `당신은 대한민국 교육 환경을 깊이 이해하고 있는 장학사 출신의 교사 전문 심리 코칭 전문가입니다. 
+아래 원시 데이터를 바탕으로 [${userInfo.nickname}] 선생님만을 위한 1:1 심층 교육 스타일 분석 및 슬럼프 극복 리포트를 정중하고 전문적인 서술체로 작성해 주세요.
+
+[교사 기본 정보]
+- 학교명: ${userInfo.school}
+- 교사 성명: ${userInfo.nickname}
+- 담당 과목/학년: ${userInfo.subject}
+
+[진단 원시 데이터]
+1. 교수 스타일 Grid 좌표: X축 = ${X}, Y축 = ${Y} 
+2. 8대 교육 동기 프로파일:\n${motiString}
+
+[요청 서술 포맷]
+1. **종합 교육 철학 한 줄 평 및 핵심 키워드 3개**
+2. **선생님의 교수 스타일 장점 분석** (교실 수업 및 학급 경영 관점)
+3. **선생님이 주의해야 할 '교사 번아웃/슬럼프 유발 요인'** (동기 점수의 결핍이나 사분면 단점 기반)
+4. **선생님 성향에 특화된 학급 경영 및 업무 효율 극대화 팁**
+5. **동료 교사(부장, 동학년) 및 관리자와 마찰 없이 협업하는 팁**`;
+
+        document.getElementById('prompt-preview').value = generatedPrompt;
+    }
+
+    function copyPromptToClipboard() {
+        const textarea = document.getElementById('prompt-preview');
+        textarea.select(); document.execCommand('copy');
+        alert('📋 교사용 심층 코칭 프롬프트가 복사되었습니다! AI 창에 붙여넣어 보세요.');
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
