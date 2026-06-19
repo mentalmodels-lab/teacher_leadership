@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>교사 개인 성향 및 교수 스타일 진단</title>
+    <title>교사 개인 성향 & 교수 스타일 진단</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #059669; --success: #10b981; --bg: #f0fdf4; --card: #ffffff; --text: #1e293b; --border: #cbd5e1; }
@@ -21,22 +22,29 @@
         .q-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
         .q-title { font-weight: bold; margin-bottom: 12px; font-size: 1.1rem; color: #0f172a; }
         .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-        .opt-label { background: #fff; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s; display: block; font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .opt-label { background: #fff; padding: 10px 5px; border-radius: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s; display: block; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .opt-label span { display: block; }
+        .opt-title { font-size: 0.95rem; font-weight: 500; color: #1e293b; }
+        .opt-eng { font-size: 0.75rem; color: #64748b; margin-top: 2px; font-family: monospace; }
         .opt-label:hover { border-color: #94a3b8; }
         input[type="radio"] { display: none; }
-        input[type="radio"]:checked + .opt-label { border-color: var(--primary); background: #dcfce7; color: var(--primary); font-weight: bold; }
-        .motivation-options { display: flex; justify-content: space-between; gap: 5px; margin-top: 10px; }
+        input[type="radio"]:checked + .opt-label { border-color: var(--primary); background: #dcfce7; }
+        input[type="radio"]:checked + .opt-label .opt-title { color: var(--primary); font-weight: bold; }
+        input[type="radio"]:checked + .opt-label .opt-eng { color: #059669; }
         .btn-submit { display: block; width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 30px; }
         .btn-submit:hover { background: #047857; }
         .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
         @media (max-width: 768px) { .result-grid { grid-template-columns: 1fr; } }
         .chart-container { background: #fff; padding: 20px; border: 1px solid var(--border); border-radius: 12px; min-height: 350px; }
-        
-        /* 교육 가이드 전용 스타일 */
         .guide-box { background: #f8fafc; border: 1px solid var(--border); padding: 25px; border-radius: 12px; margin-top: 25px; }
         .style-card { padding: 20px; border-radius: 8px; background: #fff; border-left: 5px solid var(--primary); margin-top: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        
+        /* 복사 브릿지 존 스타일링 */
         .ai-bridge-box { background: #f0fdf4; border: 2px dashed var(--success); padding: 25px; border-radius: 12px; margin-top: 30px; text-align: center; }
-        .btn-copy { background: var(--success); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .btn-copy { background: var(--success); color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+        .btn-copy:hover { background: #059669; }
+        .btn-data-copy { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; margin-left: 10px; transition: 0.2s; }
+        .btn-data-copy:hover { background: #1d4ed8; }
         #prompt-preview { width: 100%; height: 120px; margin-top: 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #475569; resize: none; }
     </style>
 </head>
@@ -50,36 +58,27 @@
         <button class="tab-btn" id="tab2-btn">2단계: 나의 교육 동기</button>
     </div>
 
-    <!-- 0단계: 인적사항 입력 화면 -->
     <div id="section0" class="survey-section active">
         <h2>교사 정보 입력</h2>
         <p style="text-align:center; color:#64748b;">본인의 교육 성향과 학교 관리를 위한 기본 정보를 입력해 주세요.</p>
         <div style="max-width: 500px; margin: 40px auto 0 auto;">
-            <div class="input-group">
-                <label for="user-school">소속 학교명</label>
-                <input type="text" id="user-school" placeholder="예: 서울고등학교">
-            </div>
-            <div class="input-group">
-                <label for="user-nickname">교사 성명 또는 닉네임</label>
-                <input type="text" id="user-nickname" placeholder="예: 김교사">
-            </div>
-            <div class="input-group">
-                <label for="user-subject">담당 과목 또는 학년</label>
-                <input type="text" id="user-subject" placeholder="예: 수학 / 2학년 담임">
-            </div>
+            <div class="input-group"><label for="user-school">소속 학교명</label><input type="text" id="user-school" placeholder="예: 서울고등학교"></div>
+            <div class="input-group"><label for="user-nickname">교사 성명 또는 닉네임</label><input type="text" id="user-nickname" placeholder="예: 김교사"></div>
+            <div class="input-group"><label for="user-subject">담당 과목 또는 학년</label><input type="text" id="user-subject" placeholder="예: 수학 / 2학년 담임"></div>
             <button class="btn-submit" onclick="startSurvey()">교육 성향 진단 시작하기 🚀</button>
         </div>
     </div>
 
-    <!-- 1단계: DISC 행동 스타일 -->
     <div id="section1" class="survey-section">
-        <h2>1단계: 교무실 및 교실에서의 내 모습 (단어 선택)</h2>
-        <p style="text-align:center; color:#64748b;">각 문항에서 학교 업무를 하거나 학생들을 지도할 때의 나와 가장 가까운 단어를 선택하세요.</p>
+        <h2 id="disc-page-title">✨ 1단계: 일상 속 나의 빛나는 모습 (1/4)</h2>
+        <p style="text-align:center; color:#64748b; margin-bottom:25px;">교무실이나 교실에서 자신의 행동 방식과 가장 잘 맞는 단어를 하나씩 골라주세요.</p>
         <div id="disc-questions"></div>
-        <button class="btn-submit" onclick="nextSection()">2단계로 이동 ➡️</button>
+        <div style="display: flex; gap: 15px; margin-top: 25px;">
+            <button type="button" id="btn-disc-prev" class="btn-submit" style="background:#64748b; margin-top:0; display:none;" onclick="moveDiscPage(-1)">⬅️ 이전 단계</button>
+            <button type="button" id="btn-disc-next" class="btn-submit" style="margin-top:0;" onclick="moveDiscPage(1)">다음 단계 ➡️</button>
+        </div>
     </div>
 
-    <!-- 2단계: 업무 동기부여 -->
     <div id="section2" class="survey-section">
         <h2>2단계: 교사로서 보람을 느끼는 순간 (점수 척도)</h2>
         <p style="text-align:center; color:#64748b;">각 문장이 본인의 교육 가치관과 얼마나 일치하는지 점수(1점~5점)를 매겨주세요.</p>
@@ -87,7 +86,6 @@
         <button class="btn-submit" onclick="calculateResults()">진단 결과 리포트 보기 📊</button>
     </div>
 
-    <!-- 결과 화면 -->
     <div id="section-result" class="survey-section">
         <h2>📊 <span id="res-name"></span> 선생님의 교육 스타일 리포트</h2>
         <div style="text-align: center; color: var(--success); font-weight: bold; margin-bottom: 15px;" id="db-status">
@@ -95,83 +93,84 @@
         </div>
         
         <div class="result-grid">
-            <div class="chart-container">
-                <h3 style="text-align:center;">나의 교수 스타일 포지션 Grid</h3>
-                <canvas id="discChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h3 style="text-align:center;">나를 움직이는 8대 교육 동기</h3>
-                <canvas id="motiChart"></canvas>
-            </div>
+            <div class="chart-container"><h3 style="text-align:center;">나의 교수 스타일 포지션 Grid</h3><canvas id="discChart"></canvas></div>
+            <div class="chart-container"><h3 style="text-align:center;">나를 움직이는 8대 교육 동기</h3><canvas id="motiChart"></canvas></div>
         </div>
 
-        <!-- 교사 맞춤형 자체 피드백 -->
         <div class="guide-box">
             <h3>💡 나의 대표적인 교수(Teaching) 스타일</h3>
-            <div class="style-card" id="style-feedback-card">
-                <!-- JavaScript에서 성향별 동적 텍스트 삽입 -->
-            </div>
+            <div class="style-card" id="style-feedback-card"></div>
         </div>
 
         <div class="ai-bridge-box">
-            <h3>🤖 AI 교육 코치에게 '교사 슬럼프 극복 및 학급경영 팁' 받기</h3>
-            <p>아래 버튼을 눌러 프롬프트를 복사한 뒤 AI(ChatGPT 등)에 붙여넣으세요.<br>
-            선생님의 성향에 맞춘 **'스트레스 관리법과 학급 경영/수업 설계 가이드'**를 제공합니다.</p>
-            <button class="btn-copy" onclick="copyPromptToClipboard()">📋 교사용 심층 분석 프롬프트 복사하기</button>
-            <textarea id="prompt-preview" readonly></textarea>
+            <h3>🤖 나만의 AI 비서 연결 및 결과 백업</h3>
+            <p>선생님의 진단 데이터 프로파일이 완성되었습니다. 아래 버튼을 선택해 활용해 보세요.</p>
+            
+            <div style="margin-bottom: 15px;">
+                <button class="btn-copy" onclick="copyPromptToClipboard()">📋 AI 분석 프롬프트 복사하기</button>
+                <button class="btn-data-copy" onclick="copyRawDataToClipboard()">📌 내 결과 텍스트만 복사하기</button>
+            </div>
+            
+            <small style="color: #64748b; display: block;">* 복사 후 <strong>ChatGPT, Claude, Gemini</strong> 창에 붙여넣기(Ctrl+V) 하시면 심층 상담을 받을 수 있습니다.</small>
+            <textarea id="prompt-preview" style="display:none;" readonly></textarea>
         </div>
     </div>
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-KUIL_ziAM2Q1etW83AjApmCMgJXQiSZ_nortcqHg5xR94VMC3eRnSV0mMsQaxwZG/exec"; // 운영자 구글 시트 URL 주입
+    // 🌟 구글 앱스 스크립트 웹 앱 URL 자동 매핑 완료
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-KUIL_ziAM2Q1etW83AjApmCMgJXQiSZ_nortcqHg5xR94VMC3eRnSV0mMsQaxwZG/exec";
 
     let userInfo = { school: "", nickname: "", subject: "" };
+    let currentSubPage = 1;
+    let rawResultText = ""; // 결과 텍스트만 따로 담을 변수
 
     const discData = [
-        ["생기발랄한", "모험심 강한", "분석적인", "무난히 잘 어울리는"],
-        ["쾌활한", "설득력 있는", "주관이 뚜렷한", "말수가 적고 차분한"],
-        ["사교적인", "자립심이 강한", "헌신적인", "순응적인"],
-        ["매력적인", "승부욕이 강한", "사려 깊은", "감정을 절제하는"],
-        ["창의적인", "유능한", "정중한", "말과 행동을 삼가는"],
-        ["활기찬", "독립적인", "섬세하고 민감한", "수용적인"],
-        ["용기를 북돋우는", "주도적인", "계획적인", "인내심이 많은"],
-        ["즉흥적인", "자신감 넘치는", "체계적인", "말이 없고 신중한"],
-        ["낙천적인", "솔직담백한", "질서정연한", "다정다감한"],
-        ["유머러스한", "소신이 뚜렷한", "철두철미한", "친근한"],
-        ["유쾌한", "대담하고 겁 없는", "꼼꼼하고 세심한", "싹싹하고 다정한"],
-        ["밝고 명랑한", "확신에 찬", "진중하고 점잖은", "침착하고 안정된"],
-        ["영감을 주는", "독립심이 강한", "이상주의적인", "온화하고 유순한"],
-        ["다정다감한", "결단력 있는", "몰두하는", "넉살 좋고 태연한"],
-        ["싹싹하게 어울리는", "적극적으로 제안하는", "예술적 감수성이 풍부한", "중재를 잘하는"],
-        ["말재주가 좋은", "성취 지향적인", "신중한", "관대한"],
-        ["열정적인", "책임감 있는", "충직하고 신뢰감 있는", "경청하는"],
-        ["돋보이고 싶어하는", "지도력 있는", "조직적인", "현실에 만족하는"],
-        ["인기 있는", "생산적인", "완벽을 추구하는", "마음을 편하게 해주는"],
-        ["활력 넘치는", "과감한", "예의 바른", "중용을 지키는"],
-        ["뻔뻔스러운", "압도하려 드는", "낯을 가리고 수줍어하는", "감정이 안 드러나는"],
-        ["산만하고 무질서한", "냉정한", "뒤끝이 있고 냉혹한", "매사 의욕이 없는"],
-        ["같은 말을 반복하는", "공격적으로 맞서는", "앙금이 오래가는", "마지못해 따르는"],
-        ["쉽게 까먹는", "거침없이 직설적인", "까다롭고 유난스러운", "겁이 많고 불안해하는"],
-        ["말을 가로채는", "조급하고 참을성 없는", "자신감 없고 불안정한", "우유부단한"],
-        ["충동적이고 예측 불가능한", "무뚝뚝하고 냉담한", "평판이 안 좋은", "소외되어 겉도는"],
-        ["대충 즉흥적으로 하는", "고집스럽고 완고한", "눈이 높아 만족할 줄 모르는", "우물쭈물 주저하는"],
-        ["눈치 보며 비위 맞추는", "자존심이 지나치게 강한", "회의적이고 비관적인", "튀지 않고 평범한"],
-        ["욱하고 성미가 급한", "따지기 좋아하는", "소외감을 잘 느끼는", "목표 의식이 없는"],
-        ["생각이 단순한", "오만하고 자만하는", "매사 부정적인", "속마음을 표현하지 않는"],
-        ["자기 자랑이 심한", "일에 과도하게 집착하는", "지나치게 내향적인", "걱정과 근심이 많은"],
-        ["말만 앞서는", "뚱하고 무뚝뚝한", "신경질적이고 예민한", "소심하고 위축된"],
-        ["정리 정돈을 못하는", "독선적이고 지배적인", "쉽게 좌절하고 낙심하는", "우유부단하고 결단력 없는"],
-        ["말바꾸기가 심한", "융통성 없고 야박한", "내성적임", "결과에 무관심한"],
-        ["주변을 어지르는", "교묘하게 사람을 조종하는", "쉽게 우울해하는", "투덜대고 불평이 많은"],
-        ["보여주기식을 좋아하는", "고집불통인", "의심 많고 회의적인", "행동이 느려터진"],
-        ["목소리만 큰", "독단적으로 주장하는", "혼자 고독을 즐기는", "움직이기 싫어하고 게으른"],
-        ["안절부절못하고 산만한", "성미가 불같이 급한", "매사 의심하고 경계하는", "행동이 둔하고 느린"],
-        ["금방 싫증 내는", "조심성 없고 덤벙대는", "복수심이 강한", "마음 없이 억지로 하는"],
-        ["변덕스러운", "계산적이고 영악한", "비판적이고 꼬투리를 잘 잡는", "갈등이 싫어 대충 타협하는"]
+        [{ko:"생기발랄한", en:"Lively"}, {ko:"모험심 강한", en:"Adventurous"}, {ko:"분석적인", en:"Analytical"}, {ko:"무난히 잘 어울리는", en:"Easy-going"}],
+        [{ko:"쾌활한", en:"Cheerful"}, {ko:"설득력 있는", en:"Persuasive"}, {ko:"주관이 뚜렷한", en:"Strong-willed"}, {ko:"말수가 적고 차분한", en:"Quiet"}],
+        [{ko:"사교적인", en:"Sociable"}, {ko:"자립심이 강한", en:"Self-determined"}, {ko:"헌신적인", en:"Self-sacrificing"}, {ko:"순응적인", en:"Submissive"}],
+        [{ko:"매력적인", en:"Charming"}, {ko:"승부욕이 강한", en:"Competitive"}, {ko:"사려 깊은", en:"Considerate"}, {ko:"감정을 절제하는", en:"Restrained"}],
+        [{ko:"창의적인", en:"Innovative"}, {ko:"유능한", en:"Competent"}, {ko:"정중한", en:"Respectful"}, {ko:"말과 행동을 삼가는", en:"Reserved"}],
+        [{ko:"활기찬", en:"Animated"}, {ko:"독립적인", en:"Independent"}, {ko:"섬세하고 민감한", en:"Sensitive"}, {ko:"수용적인", en:"Accepting"}],
+        [{ko:"용기를 북돋우는", en:"Encouraging"}, {ko:"주도적인", en:"Assertive"}, {ko:"계획적인", en:"Planful"}, {ko:"인내심이 많은", en:"Patient"}],
+        [{ko:"즉흥적인", en:"Impulsive"}, {ko:"자신감 넘치는", en:"Confident"}, {ko:"체계적인", en:"Systematic"}, {ko:"말이 없고 신중한", en:"Taciturn"}],
+        [{ko:"낙천적인", en:"Optimistic"}, {ko:"솔직담백한", en:"Frank"}, {ko:"질서정연한", en:"Orderly"}, {ko:"다정다감한", en:"Kind"}],
+        [{ko:"유머러스한", en:"Humorous"}, {ko:"소신이 뚜렷한", en:"Firm"}, {ko:"철두철미한", en:"Conscientious"}, {ko:"친근한", en:"Friendly"}],
+        
+        [{ko:"유쾌한", en:"Delightful"}, {ko:"대담하고 겁 없는", en:"Fearless"}, {ko:"꼼꼼하고 세심한", en:"Meticulous"}, {ko:"싹싹하고 다정한", en:"Affable"}],
+        [{ko:"밝고 명랑한", en:"Jovial"}, {ko:"확신에 찬", en:"Confident"}, {ko:"진중하고 점잖은", en:"Dignified"}, {ko:"침착하고 안정된", en:"Stable"}],
+        [{ko:"영감을 주는", en:"Inspiring"}, {ko:"독립심이 강한", en:"Independent"}, {ko:"이상주의적인", en:"Idealistic"}, {ko:"온화하고 유순한", en:"Mild"}],
+        [{ko:"다정다감한", en:"Affectionate"}, {ko:"결단력 있는", en:"Decisive"}, {ko:"몰두하는", en:"Absorbed"}, {ko:"넉살 좋고 태연한", en:"Nonchalant"}],
+        [{ko:"싹싹하게 어울리는", en:"Sociable"}, {ko:"적극적으로 제안하는", en:"Assertive"}, {ko:"예술적 감수성이 풍부한", en:"Artistic"}, {ko:"중재를 잘하는", en:"Mediator"}],
+        [{ko:"말재주가 좋은", en:"Talkative"}, {ko:"성취 지향적인", en:"Achieving"}, {ko:"신중한", en:"Cautious"}, {ko:"관대한", en:"Generous"}],
+        [{ko:"열정적인", en:"Enthusiastic"}, {ko:"책임감 있는", en:"Responsible"}, {ko:"충직하고 신뢰감 있는", en:"Loyal"}, {ko:"경청하는", en:"Good listener"}],
+        [{ko:"돋보이고 싶어하는", en:"Showy"}, {ko:"지도력 있는", en:"Leadership"}, {ko:"조직적인", en:"Organized"}, {ko:"현실에 만족하는", en:"Contented"}],
+        [{ko:"인기 있는", en:"Popular"}, {ko:"생산적인", en:"Productive"}, {ko:"완벽을 추구하는", en:"Perfectionistic"}, {ko:"마음을 편하게 해주는", en:"Comforting"}],
+        [{ko:"활력 넘치는", en:"Vibrant"}, {ko:"과감한", en:"Bold"}, {ko:"예의 바른", en:"Polite"}, {ko:"중용을 지키는", en:"Balanced"}],
+        
+        [{ko:"뻔뻔스러운", en:"Cheeky"}, {ko:"압도하려 드는", en:"Overbearing"}, {ko:"낯을 가리고 수줍어하는", en:"Shy"}, {ko:"감정이 안 드러나는", en:"Expressionless"}],
+        [{ko:"산만하고 무질서한", en:"Disorganized"}, {ko:"냉정한", en:"Cold"}, {ko:"뒤끝이 있고 냉혹한", en:"Unforgiving"}, {ko:"매사 의욕이 없는", en:"Unenthusiastic"}],
+        [{ko:"같은 말을 반복하는", en:"Repetitive"}, {ko:"공격적으로 맞서는", en:"Confrontational"}, {ko:"앙금이 오래가는", en:"Resentful"}, {ko:"마지못해 따르는", en:"Reluctant"}],
+        [{ko:"쉽게 까먹는", en:"Forgetful"}, {ko:"거침없이 직설적인", en:"Blunt"}, {ko:"까다롭고 유난스러운", en:"Fussy"}, {ko:"겁이 많고 불안해하는", en:"Fearful"}],
+        [{ko:"말을 가로채는", en:"Interrupting"}, {ko:"조급하고 참을성 없는", en:"Impatient"}, {ko:"자신감 없고 불안정한", en:"Insecure"}, {ko:"우유부단한", en:"Indecisive"}],
+        [{ko:"충동적이고 예측 불가능한", en:"Unpredictable"}, {ko:"무뚝뚝하고 냉담한", en:"Unaffectionate"}, {ko:"평판이 안 좋은", en:"Unpopular"}, {ko:"소외되어 겉도는", en:"Passive"}],
+        [{ko:"대충 즉흥적으로 하는", en:"Haphazard"}, {ko:"고집스럽고 완고한", en:"Stubborn"}, {ko:"눈이 높아 만족할 줄 모르는", en:"Hard to please"}, {ko:"우물쭈물 주저하는", en:"Hesitant"}],
+        [{ko:"눈치 보며 비위 맞추는", en:"People-pleasing"}, {ko:"자존심이 지나치게 강한", en:"Proud"}, {ko:"회의적이고 비관적인", en:"Pessimistic"}, {ko:"튀지 않고 평범한", en:"Mediocre"}],
+        [{ko:"욱하고 성미가 급한", en:"Short-tempered"}, {ko:"따지기 좋아하는", en:"Argumentative"}, {ko:"소외감을 잘 느끼는", en:"Alienated"}, {ko:"목표 의식이 없는", en:"Aimless"}],
+        [{ko:"생각이 단순한", en:"Simplistic"}, {ko:"오만하고 자만하는", en:"Conceited"}, {ko:"매사 부정적인", en:"Negative"}, {ko:"속마음을 표현하지 않는", en:"Undemonstrative"}],
+        
+        [{ko:"자기 자랑이 심한", en:"Boastful"}, {ko:"일에 과도하게 집착하는", en:"Workaholic"}, {ko:"지나치게 내향적인", en:"Introverted"}, {ko:"걱정과 근심이 많은", en:"Worrisome"}],
+        [{ko:"말만 앞서는", en:"Talkative"}, {ko:"뚱하고 무뚝뚝한", en:"Blunt"}, {ko:"신경질적이고 예민한", en:"Touchy"}, {ko:"소심하고 위축된", en:"Timid"}],
+        [{ko:"정리 정돈을 못하는", en:"Messy"}, {ko:"독선적이고 지배적인", en:"Domineering"}, {ko:"쉽게 좌절하고 낙심하는", en:"Easily discouraged"}, {ko:"우유부단하고 결단력 없는", en:"Weak-willed"}],
+        [{ko:"말바꾸기가 심한", en:"Inconsistent"}, {ko:"융통성 없고 야박한", en:"Intolerant"}, {ko:"지나치게 폐쇄적인", en:"Reserved"}, {ko:"결과에 무관심한", en:"Indifferent"}],
+        [{ko:"주변을 어지르는", en:"Untidy"}, {ko:"교묘하게 사람을 조종하는", en:"Manipulative"}, {ko:"쉽게 우울해하는", en:"Melancholy"}, {ko:"투덜대고 불평이 많은", en:"Complaining"}],
+        [{ko:"보여주기식을 좋아하는", en:"Showy"}, {ko:"고집불통인", en:"Obstinate"}, {ko:"의심 많고 회의적인", en:"Skeptical"}, {ko:"행동이 느려터진", en:"Slow-paced"}],
+        [{ko:"목소리만 큰", en:"Loud"}, {ko:"독단적으로 주장하는", en:"Assertive"}, {ko:"혼자 고독을 즐기는", en:"Solitary"}, {ko:"움직이기 싫어하고 게으른", en:"Lazy"}],
+        [{ko:"안절부절못하고 산만한", en:"Restless"}, {ko:"성미가 불같이 급한", en:"Hot-headed"}, {ko:"매사 의심하고 경계하는", en:"Suspicious"}, {ko:"행동이 둔하고 느린", en:"Slow-moving"}],
+        [{ko:"금방 싫증 내는", en:"Easily bored"}, {ko:"조심성 없고 덤벙대는", en:"Careless"}, {ko:"복수심이 강한", en:"Vindictive"}, {ko:"마음 없이 억지로 하는", en:"Grudging"}],
+        [{ko:"변덕스러운", en:"Fickle"}, {ko:"계산적이고 영악한", en:"Crafty"}, {ko:"비판적이고 꼬투리를 잘 잡는", en:"Critical"}, {ko:"갈등이 싫어 대충 타협하는", en:"Compromising"}]
     ];
 
-    // 👨‍🏫 교사의 일터(학교) 맥락에 맞춘 동기부여 문항
     const motiQuestions = [
         "1. 새로운 교육 이론이나 에듀테크 툴을 배워 수업에 적용해볼 기회가 있을 때 열정이 생긴다. (성장)",
         "2. 명확한 교육청 지침, 학교 내 규정 및 평가 기준 가이드라인이 명확할 때 안심하고 일한다. (안정)",
@@ -185,7 +184,7 @@
         "10. 학급을 위해 밤새 행사나 수업을 준비했는데, 관리자나 학부모가 알아주지 않고 당연하게 여기면 무력감을 느낀다. (인정)",
         "11. 우수 학급 지표나 연구 성과가 수치로 시각화되어 다른 교사/학교와 비교될 때 승부욕이 생긴다. (경쟁)",
         "12. 매년 아무런 발전 없이 똑같은 행정 서류 가공이나 반복적인 나이스(NEIS) 입력만 할 때 가장 괴롭다. (성장)",
-        "13. 교장·교감 선생님의 과도한 마이크로 매니징과 세세한 통제가 있으면 의욕이 급격히 꺾인다. (자율)",
+        "13. 교장·교감 선생님의 과도한 마이크로 매니징 및 세세한 통제가 있으면 의욕이 급격히 꺾인다. (자율)",
         "14. 보상이나 평판이 없더라도, 내가 지도한 학생 한 명이 긍정적으로 변화하는 모습을 보면 교사로서 살아있음을 느낀다. (의미)",
         "15. 동료 교사 간 파벌이 있거나 갈등이 생겨 학교 분위기가 불편해지면 업무 능률이 급격히 떨어진다. (관계)",
         "16. 잦은 교육과정 개정이나 급격한 학교 환경 변화보다, 예측 가능하고 심리적 안전감이 확보된 환경을 선호한다. (안정)"
@@ -193,24 +192,37 @@
 
     function init() {
         const discContainer = document.getElementById('disc-questions');
+        discContainer.innerHTML = '';
+        
         discData.forEach((row, qIdx) => {
-            let html = `<div class="q-card"><div class="q-title">문항 ${qIdx + 1}</div><div class="options-grid">`;
-            row.forEach((word, colIdx) => {
-                html += `<input type="radio" id="d_${qIdx}_${colIdx}" name="disc_${qIdx}" value="${colIdx}"><label for="d_${qIdx}_${colIdx}" class="opt-label">${word}</label> `;
+            let pageNum = Math.floor(qIdx / 10) + 1; 
+            let html = `<div class="q-card disc-q-page-${pageNum}" style="display: none;">
+                <div class="q-title">문항 ${qIdx + 1}</div>
+                <div class="options-grid">`;
+            
+            row.forEach((obj, colIdx) => { 
+                html += `
+                    <input type="radio" id="d_${qIdx}_${colIdx}" name="disc_${qIdx}" value="${colIdx}">
+                    <label for="d_${qIdx}_${colIdx}" class="opt-label">
+                        <span class="opt-title">${obj.ko}</span>
+                        <span class="opt-eng">${obj.en}</span>
+                    </label> `; 
             });
-            html += `</div></div>`;
-            discContainer.innerHTML += html;
+            discContainer.innerHTML += html + `</div></div>`;
         });
 
         const motiContainer = document.getElementById('motivation-questions');
+        motiContainer.innerHTML = '';
         motiQuestions.forEach((qText, qIdx) => {
             let html = `<div class="q-card"><div class="q-title">${qText}</div><div class="motivation-options">`;
-            for(let i=1; i<=5; i++) {
-                html += `<input type="radio" id="m_${qIdx}_${i}" name="moti_${qIdx}" value="${i}"><label for="m_${qIdx}_${i}" class="opt-label" style="padding:8px;">${i}점</label> `;
-            }
-            html += `</div></div>`;
-            motiContainer.innerHTML += html;
+            for(let i=1; i<=5; i++) { html += `<input type="radio" id="m_${qIdx}_${i}" name="moti_${qIdx}" value="${i}"><label for="m_${qIdx}_${i}" class="opt-label" style="padding:8px;">${i}점</label> `; }
+            motiContainer.innerHTML += html + `</div></div>`;
         });
+    }
+
+    function switchSection(secId) {
+        document.querySelectorAll('.survey-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(secId).classList.add('active');
     }
 
     function startSurvey() {
@@ -223,37 +235,62 @@
 
         document.getElementById('section0').classList.remove('active');
         document.getElementById('tab-headers').style.display = 'flex';
-        document.getElementById('section1').classList.add('active');
+        switchSection('section1');
+        currentSubPage = 1;
+        showCurrentDiscPage();
         window.scrollTo(0,0);
     }
 
-    function nextSection() {
-        for(let i=0; i<40; i++) {
-            if(!document.querySelector(`input[name="disc_${i}"]:checked`)) { alert(`행동 스타일 진단의 ${i+1}번 문항을 선택하지 않으셨습니다.`); return; }
+    function showCurrentDiscPage() {
+        for(let p=1; p<=4; p++) {
+            document.querySelectorAll(`.disc-q-page-${p}`).forEach(el => el.style.display = 'none');
         }
-        document.getElementById('tab1-btn').classList.remove('active');
-        document.getElementById('tab2-btn').classList.add('active');
-        document.getElementById('section1').classList.remove('active');
-        document.getElementById('section2').classList.add('active');
-        window.scrollTo(0,0);
+        document.querySelectorAll(`.disc-q-page-${currentSubPage}`).forEach(el => el.style.display = 'block');
+        
+        const titles = {
+            1: "✨ 1단계: 일상 속 나의 빛나는 모습 (1/4)",
+            2: "🎯 1단계: 과제를 대하는 나의 주도적 모습 (2/4)",
+            3: "⚡ 1단계: 마음대로 안 될 때 나의 방어적인 모습 (3/4)",
+            4: "🔋 1단계: 지쳤을 때 나도 모르게 나오는 모습 (4/4)"
+        };
+        document.getElementById('disc-page-title').innerText = titles[currentSubPage];
+        document.getElementById('btn-disc-prev').style.display = currentSubPage === 1 ? 'none' : 'block';
+        document.getElementById('btn-disc-next').innerText = currentSubPage === 4 ? "2단계(동기진단)로 이동 ➡️" : "다음 단계 ➡️";
     }
 
-    let discChartInstance = null;
-    let motiChartInstance = null;
-    let generatedPrompt = "";
+    function moveDiscPage(direction) {
+        if (direction === 1) {
+            let startIdx = (currentSubPage - 1) * 10;
+            let endIdx = startIdx + 10;
+            for (let i = startIdx; i < endIdx; i++) {
+                if (!document.querySelector(`input[name="disc_${i}"]:checked`)) {
+                    alert(`현재 페이지의 ${i + 1}번 문항을 선택하지 않으셨습니다.`);
+                    return;
+                }
+            }
+        }
+
+        currentSubPage += direction;
+
+        if (currentSubPage > 4) {
+            document.getElementById('tab1-btn').classList.remove('active');
+            document.getElementById('tab2-btn').classList.add('active');
+            switchSection('section2');
+            window.scrollTo(0,0);
+        } else {
+            showCurrentDiscPage();
+            window.scrollTo(0,0);
+        }
+    }
 
     function calculateResults() {
         for(let i=0; i<16; i++) {
-            if(!document.querySelector(`input[name="moti_${i}"]:checked`)) { alert(`교육 동기 진단의 ${i+1}번 문항 점수를 선택하지 않으셨습니다.`); return; }
+            if(!document.querySelector(`input[name="moti_${i}"]:checked`)) { alert(`2단계 문항 점수를 누락 없이 선택해주세요.`); return; }
         }
 
         let colSum = [0, 0, 0, 0];
-        for(let i=0; i<40; i++) {
-            let val = parseInt(document.querySelector(`input[name="disc_${i}"]:checked`).value);
-            colSum[val]++;
-        }
-        let X = colSum[2] - colSum[0]; 
-        let Y = colSum[1] - colSum[3]; 
+        for(let i=0; i<40; i++) { colSum[parseInt(document.querySelector(`input[name="disc_${i}"]:checked`).value)]++; }
+        let X = colSum[2] - colSum[0]; let Y = colSum[1] - colSum[3]; 
 
         const getMotiVal = (idx) => parseInt(document.querySelector(`input[name="moti_${idx}"]:checked`).value);
         let scores = {
@@ -264,78 +301,88 @@
         };
 
         document.getElementById('tab-headers').style.display = 'none';
-        document.querySelectorAll('.survey-section').forEach(s => s.classList.remove('active'));
-        document.getElementById('section-result').add;
-        document.getElementById('section-result').classList.add('active');
+        switchSection('section-result');
         document.getElementById('res-name').innerText = userInfo.nickname;
 
         renderCharts(X, Y, scores);
         renderStyleFeedback(X, Y);
         generateAIPrompt(X, Y, scores);
         
-        // 구글 시트 데이터 전송 백엔드 연동 영역
         const payload = { school: userInfo.school, nickname: userInfo.nickname, subject: userInfo.subject, X: X, Y: Y, scores: scores };
         fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     }
 
     function renderCharts(X, Y, scores) {
-        const ctx1 = document.getElementById('discChart').getContext('2d');
-        discChartInstance = new Chart(ctx1, {
+        new Chart(document.getElementById('discChart').getContext('2d'), {
             type: 'scatter',
             data: { datasets: [{ label: '나의 위치', data: [{x: X, y: Y}], backgroundColor: '#059669', radius: 10 }] },
-            options: { scales: { x: { min: -40, max: 40, title: {display:true, text:'← 관계 중심 / 업무 중심 →'} }, y: { min: -40, max: 40, title: {display:true, text:'← 안정 선호 / 주도 선호 →'} } } }
+            options: { scales: { x: { min: -40, max: 40 }, y: { min: -40, max: 40 } } }
         });
-
-        const ctx2 = document.getElementById('motiChart').getContext('2d');
-        motiChartInstance = new Chart(ctx2, {
+        new Chart(document.getElementById('motiChart').getContext('2d'), {
             type: 'radar',
-            data: { labels: Object.keys(scores), datasets: [{ label: '동기 스코어', data: Object.values(scores), backgroundColor: 'rgba(5, 150, 105, 0.15)', borderColor: '#059669', borderWidth: 2 }] },
+            data: { labels: Object.keys(scores), datasets: [{ label: '동기 스코어', data: Object.values(scores), backgroundColor: 'rgba(5, 150, 105, 0.15)', borderColor: '#059669' }] },
             options: { scales: { r: { min: 2, max: 10 } } }
         });
     }
 
-    // 사분면 기반 자체 교수 스타일 피드백 엔진
     function renderStyleFeedback(X, Y) {
         let card = document.getElementById('style-feedback-card');
         if (X >= 0 && Y >= 0) {
-            card.innerHTML = `<h4>🎯 목표지향적 강력한 리더형 교사 (D)</h4><p>선생님은 명확한 목표와 카리스마를 바탕으로 학급을 일사불란하게 이끄는 스타일입니다. 학생들이 도전에 직면했을 때 강력한 추진력을 불어넣어 주며, 결과 중심의 프로젝트 수업에서 뛰어난 성과를 냅니다. 다만, 가끔은 속도가 조금 느리거나 감정적 배려가 필요한 학생들의 신호를 놓치지 않도록 주의가 필요합니다.</p>`;
+            card.innerHTML = `<h4>🎯 목표지향적 강력한 리더형 교사 (D)</h4><p>선생님은 명확한 목표와 카리스마를 바탕으로 학급을 일사불란하게 이끄는 스타일입니다. 결과 중심의 프로젝트 수업에서 뛰어난 성과를 냅니다.</p>`;
         } else if (X < 0 && Y >= 0) {
-            card.innerHTML = `<h4>✨ 소통과 활력 중심의 에너지형 교사 (I)</h4><p>선생님은 교실 분위기를 항상 밝고 활기차게 만드는 탁월한 능력이 있습니다. 아이디어가 풍부하여 혁신적인 수업 방식을 적극 시도하고, 친근한 대화로 학생들과의 정서적 벽을 쉽게 허뭅니다. 단, 행정 업무나 세부적인 마무리가 흐려지기 쉬우니 타임라인을 꼼꼼하게 메모하는 습관이 도움이 됩니다.</p>`;
+            card.innerHTML = `<h4>✨ 소통과 활력 중심의 에너지형 교사 (I)</h4><p>선생님은 교실 분위기를 항상 밝고 활기차게 만드는 탁월한 능력이 있습니다. 대화로 학생들과의 정서적 벽을 쉽게 허뭅니다.</p>`;
         } else if (X < 0 && Y < 0) {
-            card.innerHTML = `<h4>🤝 경청과 배려 중심의 서번트형 교사 (S)</h4><p>선생님은 교실을 가장 안전하고 평화로운 공간으로 만드는 따뜻한 치유자입니다. 소외되는 학생의 이야기를 묵묵히 들어주며 감정적 지지대 역할을 훌륭히 수행합니다. 학급의 급격한 변화보다는 안정된 루틴을 선호합니다. 갈등 상황을 회피하려다 지칠 수 있으니 가끔은 단호한 훈육 태도도 필요합니다.</p>`;
+            card.innerHTML = `<h4>🤝 경청과 배려 중심의 서번트형 교사 (S)</h4><p>선생님은 교실을 가장 안전하고 평화로운 공간으로 만드는 따뜻한 치유자입니다. 소외되는 학생의 지지대 역할을 훌륭히 수행합니다.</p>`;
         } else {
-            card.innerHTML = `<h4>🔍 체계와 정확성 중심의 멘토형 교사 (C)</h4><p>선생님은 구조화된 지식 전달과 공정하고 명확한 기준 처리에 능한 철두철미한 전문가입니다. 수업 자료의 완성도가 매우 높으며 수행평가나 나이스 입력 시 실수가 거의 없습니다. 규칙과 원칙을 중시하지만, 규칙 조항에 지나치게 얽매이면 즉흥적이고 창의적인 학생의 돌발 행동에 스트레스를 받을 수 있으니 유연성을 발휘해 보세요.</p>`;
+            card.innerHTML = `<h4>🔍 체계와 정확성 중심의 멘토형 교사 (C)</h4><p>선생님은 구조화된 지식 전달과 공정하고 명확한 기준 처리에 능한 철두철미한 전문가입니다. 수업 자료의 완성도가 매우 높습니다.</p>`;
         }
     }
 
     function generateAIPrompt(X, Y, scores) {
         let motiString = Object.entries(scores).map(([k, v]) => `- ${k}: ${v}점`).join("\n");
+        
+        // 📌 결과값만 따로 심플하게 복사할 텍스트 빌드
+        rawResultText = `[교사 성향 진단 결과 브리핑]\n- 학교: ${userInfo.school}\n- 이름: ${userInfo.nickname}\n- 담당: ${userInfo.subject}\n- DISC 행동 스타일 좌표: X축 = ${X}, Y축 = ${Y}\n- 8대 교육 동기 점수:\n${motiString}`;
+
         generatedPrompt = `당신은 대한민국 교육 환경을 깊이 이해하고 있는 장학사 출신의 교사 전문 심리 코칭 전문가입니다. 
-아래 원시 데이터를 바탕으로 [${userInfo.nickname}] 선생님만을 위한 1:1 심층 교육 스타일 분석 및 슬럼프 극복 리포트를 정중하고 전문적인 서술체로 작성해 주세요.
+[${userInfo.nickname}] 선생님만을 위한 1:1 심층 교육 스타일 분석 리포트를 작성해 주세요.
 
-[교사 기본 정보]
-- 학교명: ${userInfo.school}
-- 교사 성명: ${userInfo.nickname}
-- 담당 과목/학년: ${userInfo.subject}
+[교사 정보]
+- 학교명: ${userInfo.school} / 성명: ${userInfo.nickname} / 담당: ${userInfo.subject}
 
-[진단 원시 데이터]
-1. 교수 스타일 Grid 좌표: X축 = ${X}, Y축 = ${Y} 
-2. 8대 교육 동기 프로파일:\n${motiString}
+[진단 데이터]
+1. 교수 스타일 좌표: X축 = ${X}, Y축 = ${Y} 
+2. 8대 교육 동기:\n${motiString}
 
-[요청 서술 포맷]
-1. **종합 교육 철학 한 줄 평 및 핵심 키워드 3개**
-2. **선생님의 교수 스타일 장점 분석** (교실 수업 및 학급 경영 관점)
-3. **선생님이 주의해야 할 '교사 번아웃/슬럼프 유발 요인'** (동기 점수의 결핍이나 사분면 단점 기반)
-4. **선생님 성향에 특화된 학급 경영 및 업무 효율 극대화 팁**
-5. **동료 교사(부장, 동학년) 및 관리자와 마찰 없이 협업하는 팁**`;
-
+[요청 포맷]
+1. 종합 교육 철학 한 줄 평 및 핵심 키워드 3개
+2. 교수 스타일 장점 분석 (교실 수업 및 학급 경영 관점)
+3. 교사 번아웃/슬럼프 유발 요인 및 극복법
+4. 성향 맞춤형 학급 경영 및 업무 효율 극대화 팁
+5. 동료 교사 및 관리자와 마찰 없이 협업하는 팁`;
+        
         document.getElementById('prompt-preview').value = generatedPrompt;
     }
 
+    // 🌟 프롬프트 클립보드 복사
     function copyPromptToClipboard() {
-        const textarea = document.getElementById('prompt-preview');
-        textarea.select(); document.execCommand('copy');
-        alert('📋 교사용 심층 코칭 프롬프트가 복사되었습니다! AI 창에 붙여넣어 보세요.');
+        const preview = document.getElementById('prompt-preview');
+        preview.style.display = "block"; // 잠시 노출시켜 복사 유도
+        preview.select();
+        document.execCommand('copy');
+        preview.style.display = "none"; // 다시 숨김
+        alert('📋 전문 상담 프롬프트가 복사되었습니다!\nChatGPT나 Claude 창에 그대로 붙여넣기(Ctrl+V) 하세요.');
+    }
+
+    // 🌟 결과 데이터 텍스트만 콤팩트하게 클립보드 복사
+    function copyRawDataToClipboard() {
+        const dummy = document.createElement("textarea");
+        document.body.appendChild(dummy);
+        dummy.value = rawResultText;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert('📌 내 성향 데이터 요약본이 복사되었습니다!\n메모장이나 AI 채팅창에 활용하세요.');
     }
 
     window.onload = init;
